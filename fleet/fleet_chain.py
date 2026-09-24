@@ -6,15 +6,16 @@ via fleet_state.json, so each wave only processes NEW tokens.
 Stops when pool stops growing for 3 consecutive checks (2h idle) or max_waves hit.
 """
 import json
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-POOL = Path(r'C:/Users/User/tmp/gh_pats_all.json')
-STATE = Path(r'C:/Users/User/tmp/fleet_state.json')
-PY = r'C:/Users/User/AppData/Local/Programs/Python/Python311/python.exe'
-SCRIPT = Path(r'C:/Users/User/tmp/fleet_deploy.py')
+POOL = Path(os.environ.get('KF_POOL', str(Path(__file__).resolve().parent / 'gh_pats_all.json')))
+STATE = Path(os.environ.get('KF_FLEET_STATE', str(Path(__file__).resolve().parent / 'fleet_state.json')))
+PY = os.environ.get('PYTHON', sys.executable)
+SCRIPT = Path(__file__).resolve().parent / 'fleet_deploy.py'
 MAX_WAVES = 30
 IDLE_LIMIT = 3  # consecutive no-growth waves
 
@@ -51,7 +52,7 @@ def main():
             break
         if dep < size:
             # wait for any running fleet_deploy to finish (single instance via state lock file)
-            lock = Path(r'C:/Users/User/tmp/fleet_wave.lock')
+            lock = Path(__file__).resolve().parent / 'fleet_wave.lock'
             if lock.exists() and time.time() - lock.stat().st_mtime < 3600:
                 print('[chain] wave in progress, wait 10min', flush=True)
                 time.sleep(600)

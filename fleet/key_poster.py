@@ -19,14 +19,14 @@ import time
 import urllib.request
 from pathlib import Path
 
-sys.path.insert(0, r'C:/Users/User/tmp')
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import key_enrich
 
 BOT = os.environ['TG_BOT_TOKEN']
 CHAT_ID = int(os.environ.get('TG_CHAT_ID', '0'))
-STATE = Path(r'C:/Users/User/tmp/key_poster_state_v3.json')
+STATE = Path(os.environ.get('KF_POSTER_STATE', str(Path(__file__).resolve().parent.parent / 'data' / 'poster_state.json')))
 KH_DB = Path(__file__).resolve().parent.parent / 'data' / 'keys.db'
-GAS_DB = Path(r'C:/Users/User/Desktop/Github-API-scan/leaked_keys.db')
+GAS_DB = Path(os.environ.get('KF_GAS_DB', str(Path(__file__).resolve().parent.parent / 'leaked_keys.db')))
 
 # провайдеры, у которых free-ключ без баланса всё равно полезен (модели отвечают)
 FREE_OK_PROV = {'OPENROUTER', 'GROQ', 'TAVILY', 'REPLICATE'}

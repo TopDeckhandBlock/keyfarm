@@ -21,10 +21,10 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(r'C:/Users/User/Desktop/keyfarm-node')
-FLEET_POOL = Path(r'C:/Users/User/tmp/gh_pats_all.json')
-STATE = Path(r'C:/Users/User/tmp/fleet_state.json')
-POOL_KEY = Path(r'C:/Users/User/tmp/imba_pool_key.txt').read_text().strip()
+ROOT = Path(os.environ.get('KF_NODE_SRC', str(Path(__file__).resolve().parent.parent)))
+FLEET_POOL = Path(os.environ.get('KF_POOL', str(Path(__file__).resolve().parent / 'gh_pats_all.json')))
+STATE = Path(os.environ.get('KF_FLEET_STATE', str(Path(__file__).resolve().parent / 'fleet_state.json')))
+POOL_KEY = os.environ.get('POOL_KEY') or Path(os.environ.get('KF_POOL_KEY_FILE', str(Path(__file__).resolve().parent / 'pool_key.txt'))).read_text().strip()
 
 EXCLUDE_NAMES = {'gh_tokens.txt', 'working_keys_verified.txt', 'gh_accounts.json', 'pool.json'}
 
