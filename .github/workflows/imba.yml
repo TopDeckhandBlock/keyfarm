@@ -1,0 +1,84 @@
+name: IMBA Key Hunter
+
+on:
+  schedule:
+    - cron: '23 4 */3 * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: imba-hunt
+  cancel-in-progress: false
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install deps
+        run: |
+          pip install -q -r requirements.txt cryptography
+          mkdir -p data results
+
+      - name: Decrypt token pool
+        env:
+          POOL_KEY: ${{ secrets.POOL_KEY }}
+          NODE_TOKENS: ${{ secrets.NODE_TOKENS }}
+        run: |
+          if [ -n "${NODE_TOKENS:-}" ]; then
+            printf '%s\n' "$NODE_TOKENS" > gh_tokens.txt
+            echo "node mode: using own token(s)"
+          elif [ -f pool.enc ] && [ -n "${POOL_KEY:-}" ]; then
+            python pool_crypto.py decrypt pool.enc data/pool.json
+            python - <<'EOF'
+          import json
+          pool = json.load(open('data/pool.json'))
+          with open('gh_tokens.txt','w') as f:
+              f.write('\n'.join(a['pat'] for a in pool) + '\n')
+          with open('data/gh_accounts.json','w') as f:
+              json.dump(pool, f)
+          print(f'fed {len(pool)} tokens into gh_tokens.txt')
+          EOF
+          else
+            echo 'no NODE_TOKENS and no pool.enc — unauthenticated mode (limited)'
+            touch gh_tokens.txt
+          fi
+
+      - name: Auto-improve (mine new patterns)
+        continue-on-error: true
+        run: |
+          python auto_improve.py --no-push || true
+        env:
+          PYTHONUNBUFFERED: '1'
+
+      - name: Run IMBA orchestrator
+        run: python run_imba.py --minutes 150
+        env:
+          PYTHONUNBUFFERED: '1'
+
+      - name: Commit results back
+        run: |
+          git config user.name 'imba-bot'
+          git config user.email 'imba@bot.local'
+          git add results/ || true
+          if ! git diff --cached --quiet; then
+            git commit -m "results $(date -u +%Y-%m-%dT%H:%M)"
+            git push
+          fi
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hunt-run
+          path: |
+            results/
+            parser.log
+            validator.log
+          retention-days: 7

@@ -1,0 +1,21 @@
+# data & runtime
+data/
+*.log
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
+*.pyc
+parser.lock
+validator.lock
+*.pid
+
+# SECRETS — never commit
+gh_tokens.txt
+gh_accounts.json
+pool.json
+pool.enc
+working_keys_verified.txt
+.env
+fleet/*_state.json
+fleet/*_pool.json
