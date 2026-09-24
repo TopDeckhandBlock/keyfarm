@@ -1,5 +1,5 @@
 """
-KeyHunter Docker Hub Scanner — searches Docker Hub for leaked API keys.
+KeyFarm Docker Hub Scanner — searches Docker Hub for leaked API keys.
 
 Docker images often contain .env files baked into layers.
 We scan public Dockerfile + image configs for secrets.
@@ -9,7 +9,7 @@ import logging
 import re
 import time
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 from key_patterns import KEY_PATTERNS, ENV_RE, KIMI_PATTERN, extract_all_keys
 
 KEY_PATTERNS = {

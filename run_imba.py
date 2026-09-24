@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""IMBA orchestrator — runs KeyHunter parser + validator with a time budget.
+"""IMBA orchestrator — runs KeyFarm parser + validator with a time budget.
 
 Designed for GitHub Actions cron (6h runs, max 360 min per run).
   python run_imba.py --minutes 280

@@ -1,5 +1,5 @@
 """
-KeyHunter Shared Key Patterns — single source of truth.
+KeyFarm Shared Key Patterns — single source of truth.
 
 All scanners import from here to ensure consistent, precise key detection.
 Patterns are derived from REAL working keys in the DB (verified formats).

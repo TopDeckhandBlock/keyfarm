@@ -1,5 +1,5 @@
 """
-KeyHunter Validator — standalone validation process.
+KeyFarm Validator — standalone validation process.
 
 Runs in parallel with eternal_v9.py (parser). Continuously reads NEW/ERR
 keys from the DB, validates them against provider APIs, and updates status.
@@ -14,9 +14,9 @@ Usage:
     python -u src/validator.py
 
 Env knobs:
-    KEYHUNTER_VAL_INTERVAL=2   — seconds between polls (default 2)
-    KEYHUNTER_VAL_BATCH=100    — max keys per poll (default 100)
-    KEYHUNTER_VAL_WORKERS=30   — concurrent validation threads (default 30)
+    KEYFARM_VAL_INTERVAL=2   — seconds between polls (default 2)
+    KEYFARM_VAL_BATCH=100    — max keys per poll (default 100)
+    KEYFARM_VAL_WORKERS=30   — concurrent validation threads (default 30)
 """
 from __future__ import annotations
 
@@ -40,10 +40,10 @@ import eternal_v10 as e  # noqa: E402
 # Config
 # --------------------------------------------------------------------------- #
 PROJ = Path(__file__).resolve().parent.parent
-POLL_INTERVAL = float(os.environ.get("KEYHUNTER_VAL_INTERVAL", "2"))
-BATCH_SIZE = int(os.environ.get("KEYHUNTER_VAL_BATCH", "100"))
-WORKERS = int(os.environ.get("KEYHUNTER_VAL_WORKERS", "30"))
-LOG_LEVEL = os.environ.get("KEYHUNTER_LOG_LEVEL", "INFO").upper()
+POLL_INTERVAL = float(os.environ.get("KEYFARM_VAL_INTERVAL", "2"))
+BATCH_SIZE = int(os.environ.get("KEYFARM_VAL_BATCH", "100"))
+WORKERS = int(os.environ.get("KEYFARM_VAL_WORKERS", "30"))
+LOG_LEVEL = os.environ.get("KEYFARM_LOG_LEVEL", "INFO").upper()
 
 _STOP = threading.Event()
 
@@ -64,7 +64,7 @@ for _sig in (signal.SIGINT, signal.SIGTERM):
 # Logging — separate file so it doesn't mix with parser log
 # --------------------------------------------------------------------------- #
 def _setup_logging() -> logging.Logger:
-    log = logging.getLogger("keyhunter-validator")
+    log = logging.getLogger("keyfarm-validator")
     log.setLevel(LOG_LEVEL)
     if log.handlers:
         return log
@@ -188,7 +188,7 @@ def main() -> None:
     e.db_init()  # ensure schema exists
 
     print("=" * 60)
-    print("  KeyHunter VALIDATOR v10")
+    print("  KeyFarm VALIDATOR v10")
     print(f"  Poll: {POLL_INTERVAL}s | batch={BATCH_SIZE} | threads={WORKERS}")
     print(f"  Providers: {len(e.PROVIDERS)}")
     print("  Reads NEW keys from DB -> validates -> updates status")

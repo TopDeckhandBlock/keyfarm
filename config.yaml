@@ -1,4 +1,4 @@
-# KeyHunter Configuration
+# KeyFarm Configuration
 
 # GitHub token (получить: https://github.com/settings/tokens)
 github_token: ""  # Вставить токен или использовать gh auth

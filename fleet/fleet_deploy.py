@@ -2,8 +2,8 @@
 """FLEET DEPLOYER — deploy the IMBA parser to N GitHub accounts.
 
 For each account (needs PAT with repo+workflow scope):
-  1. create private repo keyhunter-imba (skip if exists)
-  2. push all files from local keyhunter-imba dir via Git Data API (tree at once)
+  1. create private repo keyfarm-node (skip if exists)
+  2. push all files from local keyfarm-node dir via Git Data API (tree at once)
   3. set secrets: POOL_KEY (shared Fernet key) + NODE_TOKENS (own PAT, comma-sep)
   4. verify workflow exists; schedule runs automatically (cron every 3 days)
 
@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(r'C:/Users/User/Desktop/keyhunter-imba')
+ROOT = Path(r'C:/Users/User/Desktop/keyfarm-node')
 FLEET_POOL = Path(r'C:/Users/User/tmp/gh_pats_all.json')
 STATE = Path(r'C:/Users/User/tmp/fleet_state.json')
 POOL_KEY = Path(r'C:/Users/User/tmp/imba_pool_key.txt').read_text().strip()
@@ -75,11 +75,11 @@ def set_secret(token, repo, name, value):
     return st2 in (201, 204), str(st2)
 
 def deploy_account(login, token, files):
-    repo = f'{login}/keyhunter-imba'
+    repo = f'{login}/keyfarm-node'
     out = {'login': login}
     # 1. create repo
     st, r = api(token, '/user/repos', method='POST',
-                body={'name': 'keyhunter-imba', 'private': True, 'auto_init': False})
+                body={'name': 'keyfarm-node', 'private': True, 'auto_init': False})
     if st == 201:
         out['repo'] = 'created'
     elif st == 422 and 'already exists' in str(r):

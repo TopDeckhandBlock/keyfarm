@@ -1,5 +1,5 @@
 """
-KeyHunter GitHub Issues Scanner.
+KeyFarm GitHub Issues Scanner.
 
 People paste API keys in GitHub issues, PRs, and discussions when:
   - Reporting bugs ("my key doesn't work: DASHSCOPE_API_KEY=sk-xxxx")
@@ -15,7 +15,7 @@ import logging
 import time
 import requests
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 
 ISSUE_QUERIES = [
     "DASHSCOPE_API_KEY",

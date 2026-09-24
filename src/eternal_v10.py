@@ -1,5 +1,5 @@
 """
-KeyHunter v9 — hardened fork of eternal_v8.
+KeyFarm parser — multi-source key hunter.
 
 Fixes vs v8 (see review):
   [CRITICAL]
@@ -11,7 +11,7 @@ Fixes vs v8 (see review):
    6. Token rotation: thread-safe via Lock; dead tokens auto-retired
    7. Overlapping-window scan of git log (no keys cut in half by truncation)
   [RELIABILITY]
-   8. Removed dead code: gitleaks paths, WEB_SESSIONS, web_search*
+   8. Removed dead code: WEB_SESSIONS, web_search*
    9. Deduped ENDPOINT_SEARCHES
   10. Unified phase return types: always dict[prov -> set[(key, repo)]]
   11. get_repo_size uses token rotation (was burning main token)
@@ -32,8 +32,8 @@ Fixes vs v8 (see review):
   25. Windows path/portability: no hardcoded user paths
 
 Env knobs (for testing):
-  KEYHUNTER_MAX_CYCLES=N   — stop after N cycles (default: run forever)
-  KEYHUNTER_LOG_LEVEL=DEBUG|INFO|WARNING
+  KEYFARM_MAX_CYCLES=N   — stop after N cycles (default: run forever)
+  KEYFARM_LOG_LEVEL=DEBUG|INFO|WARNING
 """
 from __future__ import annotations
 
@@ -71,8 +71,8 @@ CLONE_DIR = PROJ / "data" / "clones"
 TOKENS_FILE = PROJ / "gh_tokens.txt"
 CONFIG_FILE = PROJ / "config.yaml"
 
-MAX_CYCLES = int(os.environ.get("KEYHUNTER_MAX_CYCLES", "0"))  # 0 = forever
-LOG_LEVEL = os.environ.get("KEYHUNTER_LOG_LEVEL", "INFO").upper()
+MAX_CYCLES = int(os.environ.get("KEYFARM_MAX_CYCLES", "0"))  # 0 = forever
+LOG_LEVEL = os.environ.get("KEYFARM_LOG_LEVEL", "INFO").upper()
 
 # Tunables (overridable from config.yaml).
 CONFIG = {
@@ -124,7 +124,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _setup_logging() -> logging.Logger:
-    log = logging.getLogger("keyhunter")
+    log = logging.getLogger("keyfarm")
     log.setLevel(LOG_LEVEL)
     if log.handlers:
         return log
@@ -1279,7 +1279,7 @@ def _extract_keys(text: str, require_context: bool = False
 
 # === ENTROPY DETECTION (v10) ===
 # Catches keys without a known prefix/format (new providers, custom tokens).
-# Based on TruffleHog approach: high Shannon entropy = likely a secret.
+# High Shannon entropy = likely a secret.
 
 # Tokens that look like API keys: 32-64 chars, alnum + -_.
 _ENTROPY_RE = re.compile(r'\b([A-Za-z0-9_-]{32,64})\b')
@@ -2688,7 +2688,7 @@ def main() -> None:
 
     active = [k for k, v in PROVIDERS.items() if v.get("vars")]
     print("=" * 60)
-    print("  KeyHunter PARSER v9  [REALTIME + FILENAME-FIRST]")
+    print("  KeyFarm PARSER v9  [REALTIME + FILENAME-FIRST]")
     print("  Strategy: realtime events + git history + filename search")
     print(f"  Providers: {len(active)} active ({', '.join(active[:6])}...)")
     print(f"  Tokens:   {TOKENS.count()} live")

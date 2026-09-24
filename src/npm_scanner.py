@@ -1,5 +1,5 @@
 """
-KeyHunter NPM Scanner — searches NPM packages for leaked API keys.
+KeyFarm NPM Scanner — searches NPM packages for leaked API keys.
 
 NPM packages often contain hardcoded keys in:
 - package.json (config sections)
@@ -11,7 +11,7 @@ import logging
 import re
 import time
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 from key_patterns import KEY_PATTERNS, ENV_RE, KIMI_PATTERN, extract_all_keys
 
 KEY_PATTERNS = {

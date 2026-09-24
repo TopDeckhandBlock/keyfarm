@@ -1,5 +1,5 @@
 """
-KeyHunter HuggingFace Models + Datasets Scanner.
+KeyFarm HuggingFace Models + Datasets Scanner.
 
 Extends HF scanning beyond Spaces to:
   - Models (model cards with README containing keys)
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import requests
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 
 _HF_INTERESTING = ['.env', '.env.local', 'README.md', 'app.py', 'main.py',
                    'config.json', 'config.yaml', 'requirements.txt',

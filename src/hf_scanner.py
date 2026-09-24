@@ -23,7 +23,7 @@ from typing import Dict, List, Set, Tuple
 
 import requests
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 
 
 # File types where keys are most likely committed in HF Spaces.

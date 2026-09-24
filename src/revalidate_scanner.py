@@ -1,5 +1,5 @@
 """
-KeyHunter Revalidation Scanner — re-checks LIMITED keys that may have revived.
+KeyFarm Revalidation Scanner — re-checks LIMITED keys that may have revived.
 
 ZAI keys reset their 5-hour chat window periodically.
 KIMI keys reset daily.
@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import time
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 
 REVALIDATE_PROVIDERS = ["ZAI", "KIMI"]
 

@@ -21,7 +21,7 @@ from pathlib import Path
 
 BOT = os.environ['TG_BOT_TOKEN']
 CHAT_ID = int(os.environ.get('TG_CHAT_ID', '0'))
-TOKENS_FILE = Path(r'C:/Users/User/Desktop/keyhunter/gh_tokens.txt')
+TOKENS_FILE = Path(__file__).resolve().parent.parent / 'gh_tokens.txt'
 STATE = Path(r'C:/Users/User/tmp/dashscope_hunter_state.json')
 
 # DashScope key format: sk- + 32 hex (same as DeepSeek — validated by endpoint)

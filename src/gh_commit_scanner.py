@@ -1,5 +1,5 @@
 """
-KeyHunter GitHub Commits Scanner — searches commit messages for leaked keys.
+KeyFarm GitHub Commits Scanner — searches commit messages for leaked keys.
 
 GitHub has a separate /search/commits endpoint (different from /search/code).
 People often commit secrets in messages or as part of commit content.
@@ -12,7 +12,7 @@ import logging
 import re
 import time
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 from key_patterns import KEY_PATTERNS, ENV_RE, KIMI_PATTERN, extract_all_keys
 
 # Search queries — commit search finds where keys appear in messages/diffs

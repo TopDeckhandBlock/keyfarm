@@ -4,9 +4,6 @@ Self-improving parser that hunts leaked API keys across GitHub and a dozen other
 code hosts, validates them live against each provider, and posts the **actually
 working** ones (with balance + model list) to Telegram.
 
-Built from 11 forked scanners (keyhunter / Key-Scraper / matkap / gitGraber /
-gitleaks / trufflehog / keyhacks …) merged into one pipeline.
-
 > ⚠️ Educational / authorized-research tool. You are responsible for how you use it.
 
 ---
@@ -34,7 +31,7 @@ harvest PATs  →  token pool (1000+, rotating)  →  scan all sources
             →  post worthy keys to Telegram
 ```
 
-**Smart search terms** (from keyhunter): instead of only regex, search GitHub for
+**Smart search terms**: instead of only regex, search GitHub for
 high-signal strings like `T3BlbkFJ` (the base64 chunk inside every OpenAI key),
 `DASHSCOPE_API_KEY filename:.env`, `docker-compose.yml` — where secrets get
 committed most.
@@ -44,7 +41,7 @@ all share the `sk-<hex>` shape — regex can't tell them apart. This probes an
 unknown key against 13 providers and reports where it's actually alive.
 
 **Self-improvement** (`auto_improve.py`): mines new detection patterns from
-keyhunter + gitleaks configs, validates them (rejects placeholder-matching /
+open-source secret-pattern databases, validates them (rejects placeholder-matching /
 backtracking-bomb patterns), writes `src/patterns_extra.py`, and commits back —
 so every node gets smarter on its own.
 

@@ -25,7 +25,7 @@ import key_enrich
 BOT = os.environ['TG_BOT_TOKEN']
 CHAT_ID = int(os.environ.get('TG_CHAT_ID', '0'))
 STATE = Path(r'C:/Users/User/tmp/key_poster_state_v3.json')
-KH_DB = Path(r'C:/Users/User/Desktop/keyhunter/data/keys.db')
+KH_DB = Path(__file__).resolve().parent.parent / 'data' / 'keys.db'
 GAS_DB = Path(r'C:/Users/User/Desktop/Github-API-scan/leaked_keys.db')
 
 # провайдеры, у которых free-ключ без баланса всё равно полезен (модели отвечают)

@@ -1,5 +1,5 @@
 """
-KeyHunter Gitea/Codeberg Scanner — searches gitea.com and codeberg.org.
+KeyFarm Gitea/Codeberg Scanner — searches gitea.com and codeberg.org.
 
 Both use Gitea API (identical interface). Code search may be disabled,
 so we use project search → tree → download config files.
@@ -10,7 +10,7 @@ import re
 import time
 import urllib.parse
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 from key_patterns import KEY_PATTERNS, ENV_RE, KIMI_PATTERN, extract_all_keys
 
 SEARCH_QUERIES = [

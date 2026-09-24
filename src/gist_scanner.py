@@ -12,7 +12,7 @@ import threading
 import time
 from typing import Set
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 
 _GIST_MAX_FILES = 5          # cap files per gist to avoid huge dumps
 _GIST_MAX_FILE_SIZE = 50_000  # 50 KB

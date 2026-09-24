@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """AUTO-IMPROVE — self-research loop for the key parser.
 
-Mines NEW detection patterns from the open-source scanner ecosystem
-(keyhunter/gitleaks/etc.), validates them, appends to patterns_extra.py,
-and commits back to the repo so ALL nodes inherit improvements.
+Mines NEW detection patterns from open-source secret-pattern databases,
+validates them, appends to patterns_extra.py, and commits back to the repo
+so ALL nodes inherit improvements.
 
 Runs before every hunt (workflow step) and can be run locally:
   python auto_improve.py [--no-push]
@@ -21,12 +21,23 @@ PROJ = Path(__file__).parent
 EXTRA_FILE = PROJ / 'src' / 'patterns_extra.py'
 META_FILE = PROJ / 'data' / 'auto_improve_meta.json'
 
-# Research targets: (repo, ref, path, parser)
-SOURCES = [
-    ('fadidevv/keyhunter', 'HEAD', 'src/patterns.rs', 'rust'),
-    ('gitleaks/gitleaks', 'HEAD', 'config/gitleaks.toml', 'toml'),
-    ('mazen160/secrets-patterns-db', 'HEAD', 'rules-stable.yml', 'yaml-rules'),
-]
+# Pattern sources are configured via the PATTERN_SOURCES env var (JSON list of
+# [repo, ref, path, parser] tuples) so this tool isn't tied to any specific
+# upstream database. Parser kinds: "rust" | "toml" | "yaml-rules".
+#
+# Example:
+#   export PATTERN_SOURCES='[["some-org/patterns-db","HEAD","config.toml","toml"]]'
+def _load_sources():
+    raw = os.environ.get('PATTERN_SOURCES', '').strip()
+    if not raw:
+        return []
+    try:
+        return [tuple(x) for x in json.loads(raw)]
+    except Exception:
+        return []
+
+
+SOURCES = _load_sources()
 
 # Placeholder/test strings — a good pattern must NOT match these
 NEGATIVE_SAMPLES = [
@@ -65,7 +76,7 @@ def fetch_raw(repo: str, ref: str, path: str) -> str:
 
 
 def parse_rust(text: str) -> dict:
-    """keyhunter patterns.rs: m.insert("name", KeyPattern { ... regex: Regex::new(r"...")"""
+    """Rust lazy_static pattern map: m.insert("name", KeyPattern { ... Regex::new(r"...")"""
     out = {}
     for m in re.finditer(r'm\.insert\(\s*"([\w-]+)".*?Regex::new\(\s*r"([^"]+)"', text, re.S):
         out['kh_' + m.group(1)] = m.group(2)
@@ -73,7 +84,7 @@ def parse_rust(text: str) -> dict:
 
 
 def parse_toml(text: str) -> dict:
-    """gitleaks.toml: [[rules]] id = "..." regex = '''...'''"""
+    """TOML rules file: [[rules]] id = "..." regex = '''...'''"""
     out = {}
     for m in re.finditer(r'\[\[rules\]\]\s*id\s*=\s*"([^"]+)"(.*?)(?=\[\[rules\]\]|\Z)', text, re.S):
         rid, body = m.group(1), m.group(2)

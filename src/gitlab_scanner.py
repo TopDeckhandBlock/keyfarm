@@ -1,5 +1,5 @@
 """
-KeyHunter GitLab Scanner — searches GitLab.com public projects for leaked API keys.
+KeyFarm GitLab Scanner — searches GitLab.com public projects for leaked API keys.
 
 GitLab has a free public API with code search (unlike GitHub which needs PAT).
 Polls every 120s with rotating search queries.
@@ -11,7 +11,7 @@ import threading
 import time
 import os
 
-log = logging.getLogger("keyhunter")
+log = logging.getLogger("keyfarm")
 from key_patterns import KEY_PATTERNS, ENV_RE, KIMI_PATTERN, extract_all_keys
 
 # Search terms — rotated each cycle
