@@ -59,6 +59,7 @@ def _engines():
         'dashscope_hunter': 'DashScope Hunter',
         'fleet_deploy': 'Fleet Deploy',
         'deploy_chain2': 'Fleet Chain',
+        'recycler': 'Recycler',
     }
     found = {v: False for v in names.values()}
     try:

@@ -38,7 +38,17 @@ committed most.
 
 **Universal classifier** (`universal_validator.py`): DeepSeek / DashScope / Kimi
 all share the `sk-<hex>` shape — regex can't tell them apart. This probes an
-unknown key against 13 providers and reports where it's actually alive.
+unknown key against **13 OpenAI-style providers + 7 special endpoints**
+(Telegram bots, HuggingFace, GitHub PATs, npm, Slack, Replicate, Gemini) and
+reports where it's actually alive. Uses **auth-gated** endpoints only — providers
+whose `/models` is public (OpenRouter, Novita) are probed via `/key` or skipped,
+so a garbage key never false-positives.
+
+**Recycler** (`recycler.py`): the regex classifier mislabels many `sk-` keys and
+the main validator leaves a big NEW backlog. The recycler re-probes NEW + DEAD
+keys with the universal classifier, **revives** the ones alive on a different
+provider, flips their DB status, and posts them to Telegram. Pre-filters junk by
+shape before any network call (5-10x faster). `python recycler.py --loop`.
 
 **Self-improvement** (`auto_improve.py`): mines new detection patterns from
 open-source secret-pattern databases, validates them (rejects placeholder-matching /
