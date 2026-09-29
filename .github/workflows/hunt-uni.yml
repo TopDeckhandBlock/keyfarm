@@ -1,0 +1,42 @@
+name: hunt-uni
+permissions:
+  contents: write
+on:
+  schedule:
+    - cron: '43 12 */3 * *'
+  workflow_dispatch: {}
+concurrency:
+  group: keyfarm-hunt
+  cancel-in-progress: false
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -q requests
+      - run: python init_db.py
+      - run: python universal_hunt.py
+        env:
+          PYTHONUNBUFFERED: '1'
+      - run: python export_run.py
+        if: always()
+      - name: Commit run results
+        if: always()
+        run: |
+          git config user.name farm-bot
+          git config user.email farm@bot.local
+          git add results/ || true
+          if ! git diff --cached --quiet; then
+            git commit -m "uni-hunt $(date -u +%FT%T)"
+            git push
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uni-run
+          path: results/
+          retention-days: 3
