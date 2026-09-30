@@ -3,7 +3,7 @@ permissions:
   contents: write
 on:
   schedule:
-    - cron: '13 4 */3 * *'
+    - cron: '34 9 */3 * *'
   workflow_dispatch: {}
 concurrency:
   group: keyfarm-uni
