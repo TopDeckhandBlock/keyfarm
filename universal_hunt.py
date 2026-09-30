@@ -404,7 +404,7 @@ def log(msg):
     line = f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n"
     with open(LOG, "a", encoding="utf-8", errors="replace") as f:
         f.write(line)
-    print(line.strip(), flush=True)
+    print(line, end="", flush=True)
 
 
 class PATPool:
@@ -789,6 +789,7 @@ def main():
 
     issues_phase()
     gists_phase()
+    hf_phase()
 
     working = dead = 0
     with ThreadPoolExecutor(max_workers=N_THREADS) as ex:
@@ -903,6 +904,54 @@ def gists_phase():
                 except Exception:
                     continue
     log(f"GISTS done: +{n} keys")
+
+def hf_phase():
+    """v6.2: HuggingFace Spaces firehose — hardcoded keys in app/config files."""
+    n = 0
+    UA_HF = {"User-Agent": "keyfarm"}
+    try:
+        r = requests.get("https://huggingface.co/api/spaces",
+                         params={"sort": "createdAt", "direction": -1,
+                                 "limit": 80}, headers=UA_HF, timeout=30)
+        spaces = r.json() if r.status_code == 200 else []
+    except Exception:
+        spaces = []
+    for s in spaces:
+        sid = s.get("id")
+        if not sid:
+            continue
+        try:
+            tr = requests.get(
+                f"https://huggingface.co/api/spaces/{sid}/tree/main",
+                headers=UA_HF, timeout=15)
+            if tr.status_code != 200:
+                continue
+            for f in tr.json():
+                if f.get("type") != "file":
+                    continue
+                path = f.get("path", "")
+                if not path.endswith((".py", ".env", ".yml", ".yaml",
+                                      ".json", ".txt", ".toml")):
+                    continue
+                if f.get("size", 0) and f["size"] > 200_000:
+                    continue
+                raw = f"https://huggingface.co/spaces/{sid}/raw/main/{path}"
+                try:
+                    t = requests.get(raw, headers=UA_HF, timeout=15)
+                    if t.status_code == 200:
+                        src = f"hf/{sid}/{path}"
+                        for prov, key in scan_text(t.text):
+                            if key in found_keys:
+                                continue
+                            hsh = db_upsert(key, prov, src)
+                            with lock:
+                                found_keys[hsh] = (key, prov, src)
+                            n += 1
+                except Exception:
+                    continue
+        except Exception:
+            continue
+    log(f"HFSPACES done: +{n} keys (scanned {len(spaces)} spaces)")
 
 
 def loop():
