@@ -3,10 +3,10 @@ permissions:
   contents: write
 on:
   schedule:
-    - cron: '12 12/6 * * *'
+    - cron: '7,37 */6 * * *'
   workflow_dispatch: {}
 concurrency:
-  group: keyfarm-hunt
+  group: keyfarm-ds
   cancel-in-progress: false
 jobs:
   hunt:
